@@ -85,7 +85,7 @@ public class FluxClient
 
         if (string.IsNullOrEmpty(taskId))
         {
-            throw new Exception("No Task ID returned from flux endpoint.");
+            throw new FluxException("No Task ID returned from flux endpoint.");
         }
 
         return await WaitForImageUrlAsync(taskId);
@@ -99,7 +99,7 @@ public class FluxClient
 
         if (string.IsNullOrEmpty(taskId))
         {
-            throw new Exception("No Task ID returned from flux endpoint.");
+            throw new FluxException("No Task ID returned from flux endpoint.");
         }
 
         return await WaitForImageUrlAsync(taskId);
@@ -118,7 +118,7 @@ public class FluxClient
                 var sample = resultStatus.Result?.Sample;
                 if (string.IsNullOrEmpty(sample))
                 {
-                    throw new Exception("Task is ready, but 'sample' was not found in the result object.");
+                    throw new FluxException("Task is ready, but 'sample' was not found in the result object.");
                 }
 
                 return sample;
@@ -126,13 +126,18 @@ public class FluxClient
             else if (resultStatus.Status.Equals("Error", StringComparison.OrdinalIgnoreCase) ||
                      resultStatus.Status.Equals("Task not found", StringComparison.OrdinalIgnoreCase))
             {
-                throw new Exception($"Task failed or was not found. Status: {resultStatus.Status}");
+                throw new FluxException($"Task failed or was not found. Status: {resultStatus.Status}");
+            }
+            else if (resultStatus.Status.Equals("Content Moderated", StringComparison.OrdinalIgnoreCase) ||
+                     resultStatus.Status.Equals("Request Moderated", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new FluxException("Content was moderated.");
             }
 
             await Task.Delay(pollIntervalSeconds * 1000);
         }
 
-        throw new TimeoutException($"Task was not ready after {maxPollAttempts} polling attempts.");
+        throw new FluxException($"Task was not ready after {maxPollAttempts} polling attempts.");
     }
     
     private async Task<FluxProResponse> GenerateUltraAsync(FluxUltraRequest request)
@@ -158,7 +163,7 @@ public class FluxClient
 
         if (!response.IsSuccessful)
         {
-            throw new Exception(
+            throw new FluxException(
                 $"Generation request failed. Status: {response.StatusCode}. Content: {response.Content}");
         }
 
@@ -176,9 +181,16 @@ public class FluxClient
 
         if (!response.IsSuccessful)
         {
-            throw new Exception($"GetResult call failed. Status: {response.StatusCode}. Content: {response.Content}");
+            throw new FluxException($"GetResult call failed. Status: {response.StatusCode}. Content: {response.Content}");
         }
 
         return response.Data;
+    }
+}
+
+public class FluxException : Exception
+{
+    public FluxException(string message) : base(message)
+    {
     }
 }

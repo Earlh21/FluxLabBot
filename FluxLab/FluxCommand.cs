@@ -36,12 +36,19 @@ public class FluxCommand : InteractionModuleBase
 
         await DeferAsync();
 
-        var imageUrl = await client.GenerateImage(request);
-        
-        using var httpClient = new HttpClient();
-        await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
+        try
+        {
+            var imageUrl = await client.GenerateImage(request);
+            
+            using var httpClient = new HttpClient();
+            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-        await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+            await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+        }
+        catch (Exception e)
+        {
+            await FollowupAsync(e.Message);
+        }
     }
     
     [SlashCommand("fluxultra", "Create an image using FLUX 1.1 Pro Ultra")]
@@ -68,11 +75,18 @@ public class FluxCommand : InteractionModuleBase
 
         await DeferAsync();
 
-        var imageUrl = await client.GenerateImage(request);
-        
-        using var httpClient = new HttpClient();
-        await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
+        try
+        {
+            var imageUrl = await client.GenerateImage(request);
+            
+            using var httpClient = new HttpClient();
+            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-        await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+            await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+        }
+        catch (Exception e)
+        {
+            await FollowupAsync(e.Message);
+        }
     }
 }
