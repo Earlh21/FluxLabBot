@@ -41,8 +41,8 @@ public class FluxCommand : InteractionModuleBase
         
         using var httpClient = new HttpClient();
         await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
-        
-        await Context.Channel.SendFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+
+        await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
     }
     
     
