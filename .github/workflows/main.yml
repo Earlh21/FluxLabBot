@@ -21,7 +21,7 @@ jobs:
           git pull
           cd FluxLab
           dotnet build -c Release --runtime linux-x64
-          cp bin/Release/net8.0/linux-x64/* ~/bots/flux/
+          cp bin/Release/net9.0/linux-x64/* ~/bots/flux/
           systemctl stop flux
           systemctl disable flux
           systemctl enable flux
