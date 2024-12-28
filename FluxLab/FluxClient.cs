@@ -181,7 +181,6 @@ public class FluxClient
         var restRequest = new RestRequest("get_result", Method.Get);
 
         restRequest.AddHeader("X-Key", token);
-        // Add the task ID as a query parameter:  ?id=taskId
         restRequest.AddQueryParameter("id", taskId);
 
         var response = await client.ExecuteAsync<GetResultResponse>(restRequest);
