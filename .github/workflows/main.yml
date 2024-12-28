@@ -1,0 +1,28 @@
+name: FluxLab CD
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd ~/source/FluxLabBot
+          git pull
+          cd FluxLab
+          dotnet build -c Release --runtime linux-x64
+          cp bin/Release/net8.0/linux-x64/* ~/bots/flux/
+          systemctl stop flux
+          systemctl disable flux
+          systemctl enable flux
+          systemctl start flux
