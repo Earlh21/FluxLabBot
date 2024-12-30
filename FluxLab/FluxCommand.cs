@@ -43,7 +43,7 @@ public class FluxCommand : InteractionModuleBase
             using var httpClient = new HttpClient();
             await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-            await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+            await FollowupWithFileAsync(imageStream, $"{new string(prompt.Take(60).ToArray())}.jpg");
         }
         catch (Exception e)
         {
@@ -82,7 +82,7 @@ public class FluxCommand : InteractionModuleBase
             using var httpClient = new HttpClient();
             await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-            await FollowupWithFileAsync(imageStream, $"{prompt.Take(60).ToArray()}.jpg");
+            await FollowupWithFileAsync(imageStream, $"{new string(prompt.Take(60).ToArray())}.jpg");
         }
         catch (Exception e)
         {
