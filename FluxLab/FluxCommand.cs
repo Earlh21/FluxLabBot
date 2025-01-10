@@ -1,19 +1,44 @@
-﻿using Discord.Interactions;
+﻿using System.Net;
+using Discord.Interactions;
 using RestSharp;
 
 namespace FluxLab;
 
 public class FluxCommand : InteractionModuleBase
 {
-    private FluxClient client;
-    
-    public FluxCommand(FluxClient client)
+    private readonly HttpClient httpClient;
+    private readonly FluxClient client;
+
+    public FluxCommand(FluxClient fluxClient)
     {
-        this.client = client;
+        httpClient = new HttpClient();
+        client = fluxClient;
     }
-    
+
+    // Helper method to download and convert image to Base64
+    private async Task<string?> GetImagePromptBase64Async(string? imagePromptUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imagePromptUrl))
+            return null;
+
+        try
+        {
+            var response = await httpClient.GetAsync(imagePromptUrl);
+            response.EnsureSuccessStatusCode();
+
+            var imageBytes = await response.Content.ReadAsByteArrayAsync();
+            return Convert.ToBase64String(imageBytes);
+        }
+        catch (Exception ex)
+        {
+            // Optionally log the exception
+            await FollowupAsync($"Failed to process imagePrompt URL: {ex.Message}");
+            return null;
+        }
+    }
+
     [SlashCommand("flux", "Create an image using FLUX 1.1 Pro")]
-    public async Task GenerateImage(
+    public async Task GenerateFluxImage(
         string prompt,
         string? imagePrompt = null,
         int width = 1024,
@@ -22,10 +47,14 @@ public class FluxCommand : InteractionModuleBase
         int? seed = null,
         int safetyTolerance = 6)
     {
+        await DeferAsync();
+
+        string? imagePromptBase64 = await GetImagePromptBase64Async(imagePrompt);
+
         var request = new FluxProRequest
         {
             Prompt = prompt,
-            ImagePrompt = imagePrompt,
+            ImagePrompt = imagePromptBase64,
             Width = width,
             Height = height,
             PromptUpsampling = promptImprovement,
@@ -34,25 +63,21 @@ public class FluxCommand : InteractionModuleBase
             OutputFormat = "jpeg"
         };
 
-        await DeferAsync();
-
         try
         {
             var imageUrl = await client.GenerateImage(request);
-            
-            using var httpClient = new HttpClient();
-            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-            await FollowupWithFileAsync(imageStream, $"{new string(prompt.Take(60).ToArray())}.jpg");
+            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
+            await FollowupWithFileAsync(imageStream, $"{Truncate(prompt, 60)}.jpg");
         }
         catch (Exception e)
         {
-            await FollowupAsync(e.Message);
+            await FollowupAsync($"Error generating image: {e.Message}");
         }
     }
-    
+
     [SlashCommand("fluxultra", "Create an image using FLUX 1.1 Pro Ultra")]
-    public async Task GenerateImage(
+    public async Task GenerateFluxUltraImage(
         string prompt,
         string? imagePrompt = null,
         string aspectRatio = "1:1",
@@ -61,10 +86,14 @@ public class FluxCommand : InteractionModuleBase
         bool raw = false,
         float imagePromptStrength = 0.1f)
     {
+        await DeferAsync();
+
+        string? imagePromptBase64 = await GetImagePromptBase64Async(imagePrompt);
+
         var request = new FluxUltraRequest
         {
             Prompt = prompt,
-            ImagePrompt = imagePrompt,
+            ImagePrompt = imagePromptBase64,
             Seed = seed,
             SafetyTolerance = safetyTolerance,
             OutputFormat = "jpeg",
@@ -73,20 +102,23 @@ public class FluxCommand : InteractionModuleBase
             ImagePromptStrength = imagePromptStrength
         };
 
-        await DeferAsync();
-
         try
         {
             var imageUrl = await client.GenerateImage(request);
-            
-            using var httpClient = new HttpClient();
-            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
 
-            await FollowupWithFileAsync(imageStream, $"{new string(prompt.Take(60).ToArray())}.jpg");
+            await using var imageStream = await httpClient.GetStreamAsync(imageUrl);
+            await FollowupWithFileAsync(imageStream, $"{Truncate(prompt, 60)}.jpg");
         }
         catch (Exception e)
         {
-            await FollowupAsync(e.Message);
+            await FollowupAsync($"Error generating image: {e.Message}");
         }
+    }
+
+    // Utility method to truncate the filename if necessary
+    private string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return "image";
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength);
     }
 }
