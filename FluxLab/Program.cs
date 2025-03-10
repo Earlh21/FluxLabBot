@@ -3,6 +3,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using FluxLab;
+using FluxLab.Flux;
 using Microsoft.Extensions.DependencyInjection;
 
 #if DEBUG

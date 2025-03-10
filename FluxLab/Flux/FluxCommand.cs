@@ -1,8 +1,6 @@
-﻿using System.Net;
-using Discord.Interactions;
-using RestSharp;
+﻿using Discord.Interactions;
 
-namespace FluxLab;
+namespace FluxLab.Flux;
 
 public class FluxCommand : InteractionModuleBase
 {

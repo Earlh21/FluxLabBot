@@ -1,9 +1,7 @@
-﻿namespace FluxLab;
-
-using System;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using RestSharp;
-using Newtonsoft.Json;
+
+namespace FluxLab.Flux;
 
 public class FluxProRequest
 {
